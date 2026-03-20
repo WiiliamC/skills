@@ -64,9 +64,9 @@ Before running any git commands, the skill must:
    - For each file: additions, deletions, and lines changed
    - Brief description of the change purpose
 
-## Phase 2: Expert Agents (4 parallel agents)
+## Phase 2: Expert Agents (5 parallel agents)
 
-4. Launch 4 parallel agents, each with a focused scope:
+4. Launch 5 parallel agents, each with a focused scope:
 
    **a. Code Style Expert**
    - Audit changes against CLAUDE.md requirements
@@ -83,10 +83,24 @@ Before running any git commands, the skill must:
    - Identify optimization opportunities
    - Return issues in format: `{file, line_range, problem, reason, fix_suggestion}`
 
-   **d. Gatekeeper**
+   **d. Architect**
+   - Analyze architectural impact of changes
+   - Discover all README.md files in the project (excluding worktree directories)
+   - Check each README to determine if it needs updating based on the changes
+   - Look for outdated documentation that no longer matches the code structure
+   - Identify module boundary changes that should be documented
+   - Return issues in format: `{file, problem, reason, fix_suggestion}`
+
+   **e. Gatekeeper**
    - Identify test files related to changed files
    - Run relevant unit tests using: `/home/chan/miniconda3/envs/capyglan_py11/bin/python -m pytest <related_tests> -v`
    - Run modified shell scripts if any
+   - **CRITICAL - Filter unrelated failures**: Only report and recommend fixes for test failures that are directly related to the changed code
+   - **How to determine relevance**:
+     - If test file is a direct match for a changed file (e.g., `detector.py` changed → `test_detector.py` fails), include it
+     - If test file covers a module that the changed code directly uses/depends on, include it
+     - If test file is unrelated to the changed code (pre-existing flaky test, unrelated module), IGNORE the failure
+   - When a test fails but is unrelated, list it separately as "Ignored" in the report
    - Return: `{test_result, failed_tests[], error_output, recommended_fix}`
 
 ## Phase 3: Confidence Scoring
@@ -106,7 +120,10 @@ Before running any git commands, the skill must:
    - Code Style Issues (sorted by priority)
    - Bug Issues (sorted by priority)
    - Performance Issues (sorted by priority)
+   - Documentation Issues (architect findings)
    - Test/Script Failures (gatekeeper findings)
+
+   **Filter unrelated test failures**: Only include test failures where the failure is caused by the changed code. If a test file fails but none of the modified files are related to that test, exclude it from the report.
 
 8. **Deduplicate** - Merge duplicate issues found by multiple experts
 
@@ -114,7 +131,6 @@ Before running any git commands, the skill must:
    - The specific problem with file:line reference
    - Recommended fix approach
    - Files and lines to change
-   - Relevant CLAUDE.md guidance
 
 10. **Create issue report and fix plan** - Output review in this format:
 
@@ -123,7 +139,7 @@ Before running any git commands, the skill must:
 
 ### Code Review Summary
 
-Found N high-confidence issues across 4 categories:
+Found N high-confidence issues across 5 categories:
 
 #### 1. Code Style Issues (M/X)
 - Issue 1: [Brief description]
@@ -136,7 +152,11 @@ Found N high-confidence issues across 4 categories:
 #### 3. Performance Issues (M/Z)
 - Issue 1: [Brief description]
 
-#### 4. Test/Script Failures (N failures)
+#### 4. Documentation Issues (Architect)
+- Issue 1: [Brief description - which README needs update]
+- Issue 2: [Brief description - what should be updated]
+
+#### 5. Test/Script Failures (N failures)
 - test_file.py: failure description
 - script.sh: failure description
 
@@ -157,6 +177,15 @@ Found N high-confidence issues across 4 categories:
 
 ...
 
+#### Documentation Fixes
+
+1. **Problem**: [Description - which README needs update]
+   - **Files**: README.md#L10-L15
+   - **Fix**: [Specific documentation update approach]
+   - **Architect Finding**: [Architect-specific observation]
+
+2. ...
+
 ---
 
 ### Execution Plan
@@ -169,6 +198,17 @@ This review has generated a plan to fix the identified issues.
 - If no, I will leave the changes as-is.
 
 **Note**: This report is created in plan mode. Use `/exit-plan-mode accept` to confirm and proceed with fixes.
+
+---
+
+### Related Test Failures (Ignored)
+
+The following test failures were detected but are unrelated to the current changes. They have been ignored:
+
+- test_file.py: reason for ignoring
+- another_test.py: reason for ignoring
+
+**Note**: Only test failures directly related to the changed code are included in the fix plans.
 ---
 ```
 
@@ -224,3 +264,28 @@ This skill properly supports git worktrees:
   - If changed file is in `dataset/`, run tests in `test_dataset/*/` that match modified modules
   - If changed file is in `model/`, run tests in `test_model/*/` that match modified modules
   - For shell scripts, run the script directly with bash
+
+### Test Failure Relevance
+
+**Related failures** (include in report):
+- Test file directly corresponds to a changed file
+- Test covers a function/module that the changed code directly calls or depends on
+- Test failure stack trace points to lines in the changed code
+
+**Unrelated failures** (ignore, list in "Ignored" section):
+- Test file is in a different module area
+- Test failure is a pre-existing flaky test (e.g., timing-dependent, race conditions)
+- Test was already failing before the changes (check git history if unsure)
+- Test covers unrelated functionality that just happens to be in the same test file
+
+### Documentation Update Guidelines
+
+**The Architect should:**
+1. Discover all README.md files in the project (excluding worktree directories)
+2. For each README found, evaluate whether the changes affect:
+   - Architecture overview or high-level design
+   - Module structure or module responsibilities
+   - Getting started or installation instructions
+   - Usage examples or API documentation
+   - Configuration options or environment variables
+3. Report which README files need updates and what sections should be changed
