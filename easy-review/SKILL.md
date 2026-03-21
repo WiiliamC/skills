@@ -34,10 +34,7 @@ Use when:
 
 ## How It Works
 
-### Git Root Detection
-Before running any git commands, the skill must:
-1. Run `git rev-parse --show-toplevel` to find the current git repository root
-2. All git commands must be run from this directory (respects git worktrees)
+The skill operates in the current working directory. All git commands and file paths are relative to this directory.
 
 ### For `staged` mode:
 1. Uses `git diff --cached` to get staged changes only
@@ -52,21 +49,22 @@ Before running any git commands, the skill must:
 ## Phase 1: Pre-checks (3 steps)
 
 1. **Check for changes** - Use an agent to check if there are changes in the selected scope. If there are no changes, report this and stop.
-   - Use `git rev-parse --show-toplevel` to find git root
    - Use `git diff --cached` for staged mode or `git diff HEAD` for all mode
 
 2. **Get CLAUDE.md context** - Use an agent to retrieve file paths to all relevant CLAUDE.md files from the codebase.
-   - **CRITICAL**: CLAUDE.md files must be read from the worktree root (returned by `git rev-parse --show-toplevel`), NOT from the parent repository root
-   - Search for CLAUDE.md files starting from the worktree root directory
+   - Search for CLAUDE.md files in the current directory and subdirectories
+   - All file paths returned should be relative to the current directory
 
 3. **Get diff summary** - Use an agent to get the diff of selected changes, and request a structured summary:
-   - List of modified files
+   - List of modified files (paths relative to current directory)
    - For each file: additions, deletions, and lines changed
    - Brief description of the change purpose
 
 ## Phase 2: Expert Agents (5 parallel agents)
 
-4. Launch 5 parallel agents, each with a focused scope:
+All expert agents operate in the repository directory (returned by `git rev-parse --show-toplevel`). All file paths must be relative to this directory.
+
+4. Launch 5 parallel agents, each with a focused scope (all operate in current directory):
 
    **a. Code Style Expert**
    - Audit changes against CLAUDE.md requirements
@@ -85,7 +83,7 @@ Before running any git commands, the skill must:
 
    **d. Architect**
    - Analyze architectural impact of changes
-   - Discover all README.md files in the project (excluding worktree directories)
+   - Discover all README.md files in the project
    - Check each README to determine if it needs updating based on the changes
    - Look for outdated documentation that no longer matches the code structure
    - Identify module boundary changes that should be documented
@@ -232,28 +230,9 @@ This skill operates in **plan mode** by default:
 4. **User confirmation**: User reviews the plan and decides whether to execute
 5. **Fix execution**: Only after confirmation, apply changes
 
-### Git Worktree Support
-
-This skill properly supports git worktrees:
-
-1. **Git root detection**: Always run `git rev-parse --show-toplevel` first to find the correct git repository root
-2. **Worktree-aware**: The command automatically detects the worktree root, not the parent repository
-3. **All git commands**: Run all `git diff`, `git log`, and other git commands from the directory returned by `--show-toplevel`
-
-**Why this matters**: In a git worktree, `git rev-parse --show-toplevel` returns the worktree directory (e.g., `/path/to/project/.git/worktrees/feature`) rather than the main repository root, ensuring all operations target the correct changes.
-
-### Reading Project Files (CLAUDE.md, README.md, etc.)
-
-**CRITICAL**: When reading project documentation files:
-
-1. **Always use the worktree root** - The path returned by `git rev-parse --show-toplevel` is the correct base directory
-2. **Never assume the parent repository root** - The worktree may be in a completely different location (e.g., `~/.git/worktrees/feature` vs `~/project`)
-3. **Verify file paths** - All file paths should be relative to the worktree root, not the parent repository
-
-**Common mistake**: Assuming `~/develop/capyglan_headware` is the project root when it's actually the parent repository. The worktree root is `~/develop/capyglan_headware/.git/worktrees/enhance_cleaner_log`.
-
 ### General Guidelines
 
+- All commands run in the current working directory
 - Use `git diff --cached` for staged mode to get only staged changes
 - Use `git diff HEAD` for all mode to get all uncommitted changes
 - Generate specific, actionable fix plans that can be executed with the Edit tool
@@ -281,7 +260,7 @@ This skill properly supports git worktrees:
 ### Documentation Update Guidelines
 
 **The Architect should:**
-1. Discover all README.md files in the project (excluding worktree directories)
+1. Discover all README.md files in the project
 2. For each README found, evaluate whether the changes affect:
    - Architecture overview or high-level design
    - Module structure or module responsibilities
