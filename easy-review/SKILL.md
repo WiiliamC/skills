@@ -60,11 +60,11 @@ The skill operates in the current working directory. All git commands and file p
    - For each file: additions, deletions, and lines changed
    - Brief description of the change purpose
 
-## Phase 2: Expert Agents (5 parallel agents)
+## Phase 2: Expert Agents (6 parallel agents)
 
 All expert agents operate in the repository directory (returned by `git rev-parse --show-toplevel`). All file paths must be relative to this directory.
 
-4. Launch 5 parallel agents, each with a focused scope (all operate in current directory):
+4. Launch 6 parallel agents, each with a focused scope (all operate in current directory):
 
    **a. Code Style Expert**
    - Audit changes against CLAUDE.md requirements
@@ -89,7 +89,14 @@ All expert agents operate in the repository directory (returned by `git rev-pars
    - Identify module boundary changes that should be documented
    - Return issues in format: `{file, problem, reason, fix_suggestion}`
 
-   **e. Gatekeeper**
+   **e. Code Simplifier** (NEW)
+   - Analyze changed code for simplification opportunities
+   - Apply code-simplifier agent principles: reduce complexity, eliminate redundancy, improve clarity
+   - Check for: nested ternaries, overly complex expressions, redundant abstractions, unclear naming
+   - Focus on recently modified code unless instructed otherwise
+   - Return issues in format: `{file, line_range, problem, reason, fix_suggestion}`
+
+   **f. Gatekeeper**
    - Identify test files related to changed files
    - Run relevant unit tests using: `/home/chan/miniconda3/envs/capyglan_py11/bin/python -m pytest <related_tests> -v`
    - Run modified shell scripts if any
@@ -118,6 +125,7 @@ All expert agents operate in the repository directory (returned by `git rev-pars
    - Code Style Issues (sorted by priority)
    - Bug Issues (sorted by priority)
    - Performance Issues (sorted by priority)
+   - Code Simplifier Issues (sorted by priority)
    - Documentation Issues (architect findings)
    - Test/Script Failures (gatekeeper findings)
 
@@ -137,7 +145,7 @@ All expert agents operate in the repository directory (returned by `git rev-pars
 
 ### Code Review Summary
 
-Found N high-confidence issues across 5 categories:
+Found N high-confidence issues across 6 categories:
 
 #### 1. Code Style Issues (M/X)
 - Issue 1: [Brief description]
@@ -150,11 +158,15 @@ Found N high-confidence issues across 5 categories:
 #### 3. Performance Issues (M/Z)
 - Issue 1: [Brief description]
 
-#### 4. Documentation Issues (Architect)
+#### 4. Code Simplifier Issues (M/S)
+- Issue 1: [Brief description - e.g., nested ternary, overly complex expression]
+- Issue 2: [Brief description]
+
+#### 5. Documentation Issues (Architect)
 - Issue 1: [Brief description - which README needs update]
 - Issue 2: [Brief description - what should be updated]
 
-#### 5. Test/Script Failures (N failures)
+#### 6. Test/Script Failures (N failures)
 - test_file.py: failure description
 - script.sh: failure description
 
@@ -168,6 +180,15 @@ Found N high-confidence issues across 5 categories:
    - **Files**: file.py#L10-L15
    - **Fix**: [Specific fix approach]
    - **Confidence**: 85-100
+
+2. ...
+
+#### Code Simplifier Fixes
+
+1. **Problem**: [Description - e.g., nested ternary operator, overly complex expression]
+   - **Files**: file.py#L10-L15
+   - **Fix**: [Specific simplification approach]
+   - **Code Simplifier Finding**: [Simplifier-specific observation]
 
 2. ...
 
