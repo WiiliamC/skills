@@ -1,0 +1,7 @@
+interface:
+  display_name: "Develop by Subagent"
+  short_description: "TDD implementation via one subagent"
+  default_prompt: "Use $develop_by_subagent to implement the approved plan with focused TDD and main-agent acceptance review."
+
+policy:
+  allow_implicit_invocation: false
