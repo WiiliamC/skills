@@ -2,5 +2,3 @@ interface:
   display_name: "Review Repo"
   short_description: "Run multi-agent repository code reviews"
   default_prompt: "Use $review-repo to review this repository and prioritize findings."
-policy:
-  allow_implicit_invocation: false

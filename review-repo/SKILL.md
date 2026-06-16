@@ -1,13 +1,13 @@
 ---
 name: review-repo
-description: Multi-agent repository review workflow. Use when Codex is asked to review an entire code repository or a user-specified directory for architecture/design issues, likely bugs, unit test health and coverage gaps, redundant tests, code duplication, overly complex logic, shotgun surgery, performance risks, inefficient algorithms, or prioritized code review findings. This skill splits large repositories by submodule, coordinates specialized subagents for normal scopes, then deduplicates and ranks their findings.
+description: Heavy multi-agent repository review workflow. Use only when the user explicitly mentions the review-repo skill by name, such as "use review-repo" or "$review-repo", to review an entire repository or user-specified directory. Do not use for ordinary review requests unless the user explicitly names this skill. When invoked, this skill may call subagents to inspect architecture/design issues, likely bugs, unit test health and coverage gaps, redundant tests, code duplication, overly complex logic, shotgun surgery, performance risks, inefficient algorithms, and prioritized code review findings.
 ---
 
 # Review Repo
 
 ## Overview
 
-Run a whole-repository or directory-scoped review. The main agent first estimates the scoped codebase size and organization. For normal-sized scopes, launch the five specialist reviewers directly. For large scopes, split by major submodule and launch one coordinator subagent per submodule; each coordinator runs `review-repo` from that submodule directory and returns its local findings. In both cases, the main agent collects all findings, deduplicates them, and produces one priority-ordered review list.
+Run a whole-repository or directory-scoped review only after the user explicitly invoked `review-repo`. This is a heavy workflow and should not run for normal code-review requests that do not name the skill. The main agent first estimates the scoped codebase size and organization. For normal-sized scopes, launch the five specialist reviewers directly. For large scopes, split by major submodule and launch one coordinator subagent per submodule; each coordinator runs `review-repo` from that submodule directory and returns its local findings. In both cases, the main agent collects all findings, deduplicates them, and produces one priority-ordered review list.
 
 Default scope is the current repository root. If the user names one or more paths, restrict every subagent to those paths while still allowing them to read nearby docs, tests, and call sites needed to understand the scoped code.
 
@@ -22,7 +22,7 @@ Default scope is the current repository root. If the user names one or more path
    - Identify major submodules from repo structure, workspace/package config, service/app directories, ownership boundaries, or build/test config. Prefer reviewable units such as `apps/*`, `packages/*`, `services/*`, `libs/*`, or language-specific package roots. Exclude generated, vendor, build, cache, and dependency directories.
    - Spawn one coordinator subagent per selected submodule in parallel. Each coordinator must work from that submodule directory, use `review-repo` for that submodule, and return already prioritized local findings plus test commands/results.
    - Keep the module list practical. If there are too many small modules, group related modules by product area, language, or shared test command.
-5. For the direct specialist branch, spawn the five specialist subagents below in parallel. Use `explorer` for read-only review roles. Use `worker` only if the user explicitly asks for fixes, because this skill is primarily a review workflow.
+5. For the direct specialist branch, spawn the five specialist subagents below in parallel. Agent use is allowed for this skill after explicit invocation. Use `explorer` for read-only review roles. Use `worker` only if the user explicitly asks for fixes, because this skill is primarily a review workflow.
 6. While agents run, inspect high-signal files locally only when needed to understand repo shape, verify a likely cross-cutting concern, or evaluate conflicts between returned findings.
 7. Wait for all subagents, then normalize their results into findings with evidence.
 8. Deduplicate overlapping issues by root cause, not by file path. Merge supporting evidence from multiple agents or modules into the strongest single finding.
