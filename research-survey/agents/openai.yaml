@@ -1,0 +1,6 @@
+interface:
+  display_name: "Research Survey"
+  short_description: "Rigorous surveys for papers, tools, and projects"
+  default_prompt: "Use $research-survey to research this topic thoroughly and produce a rigorous comparative survey."
+policy:
+  allow_implicit_invocation: false
