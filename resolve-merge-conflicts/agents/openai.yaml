@@ -1,0 +1,6 @@
+interface:
+  display_name: "Resolve Merge Conflicts"
+  short_description: "Plan intent-aware conflict resolution"
+  default_prompt: "Use $resolve-merge-conflicts to analyze these merge conflicts and produce a resolution plan."
+policy:
+  allow_implicit_invocation: false
