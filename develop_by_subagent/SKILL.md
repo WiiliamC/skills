@@ -15,6 +15,7 @@ Use this skill only after the user explicitly invokes `$develop_by_subagent`, ty
    - Do not pass the full conversation or broad repo context.
 
 2. Start exactly one subagent for implementation.
+   - Unless the user explicitly requests a different reasoning level, start the subagent with medium reasoning.
    - Instruct it to use test-driven development: write or update the smallest meaningful failing test first, implement the change, then run focused verification.
    - Tell it not to add redundant tests. Tests should cover changed behavior, regressions, or risky edge cases only.
    - Tell it not to spawn additional subagents or delegate the task further.
@@ -48,6 +49,7 @@ Relevant context:
 <minimal file paths, APIs, constraints, and commands>
 
 Requirements:
+- Use medium reasoning unless the user explicitly requested a different reasoning level.
 - Write or update the smallest meaningful failing test first.
 - Do not add redundant tests; cover only changed behavior, regressions, or risky edge cases.
 - Do not spawn subagents or delegate further.
