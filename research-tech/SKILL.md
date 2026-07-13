@@ -1,9 +1,9 @@
 ---
-name: research-survey
-description: Rigorous, evidence-first research workflow for comprehensive surveys of academic papers, open-source projects, software tools, benchmarks, methods, libraries, datasets, and technical ecosystems. Use only when the user explicitly invokes `$research-survey` or explicitly names this skill; do not use implicitly for ordinary research requests.
+name: research-tech
+description: Rigorous, evidence-first research workflow for comprehensive surveys of academic papers, open-source projects, software tools, benchmarks, methods, libraries, datasets, and technical ecosystems. Use only when the user explicitly invokes `$research-tech` or explicitly names this skill; do not use implicitly for ordinary research requests.
 ---
 
-# Research Survey
+# Research Tech
 
 ## Overview
 
@@ -11,7 +11,7 @@ Conduct a broad, source-backed survey that favors recall over premature narrowin
 
 ## Invocation Rule
 
-Use this skill only after explicit invocation, such as `$research-survey`, "use research-survey", or "使用 research-survey". If the user asks for research without explicitly invoking this skill, do not apply these expanded requirements unless the active system has already loaded the skill.
+Use this skill only after explicit invocation, such as `$research-tech`, "use research-tech", or "使用 research-tech". If the user asks for research without explicitly invoking this skill, do not apply these expanded requirements unless the active system has already loaded the skill.
 
 ## Workflow
 
