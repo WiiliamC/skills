@@ -1,11 +1,15 @@
 ---
 name: research-competitor
-description: Evidence-first workflow for comprehensive competitor research and market research covering product landscapes, feature and specification comparisons, pricing, launch dates, availability, sales and shipments, market size and share, customer segments, use cases, interaction models, channels, business models, risks, and strategic opportunities. Use when Codex is asked to conduct 竞品调研、市场调研、行业扫描、产品对标、竞争格局分析、market landscape、competitive analysis、benchmark commercial products, compare vendors, build a competitor matrix, or write a sourced research report. Especially use when facts are current or volatile and must be verified from live sources.
+description: Evidence-first workflow for comprehensive competitor research covering competing products and vendors, product benchmarking, competitive positioning and landscape, feature and specification comparisons, pricing, availability, adoption, market share, customer segments, business models, risks, and strategic opportunities. Use only when the user clearly expresses competitor-research intent, such as 竞品调研、竞品分析、竞争产品对标、竞争对手分析、竞争格局分析、competitive analysis, competitor benchmarking, or building a competitor matrix. Do not trigger merely because a request mentions markets, industries, products, companies, vendors, prices, current facts, comparisons, research, information gathering, a market landscape, an industry scan, or a sourced report; route those general requests to research-general unless the user explicitly frames competing alternatives as competitors or asks for a competitive assessment.
 ---
 
 # Research Competitor
 
 Conduct broad, current, source-backed commercial research, normalize unlike claims into comparable fields, and produce a decision-ready report. Favor coverage and traceability over premature narrowing.
+
+## Activation boundary
+
+Apply this workflow only when the request itself has a clear competitive-analysis objective. Treat explicit requests for 竞品、竞争对手、产品对标、竞争格局, competitive positioning, or a competitor matrix as sufficient intent. Do not infer competitor intent solely from the presence of multiple products or companies. Use `research-general` for general market, industry, company, product, policy, trend, information-search, or multi-source synthesis requests; switch to this workflow only when the user asks to analyze those objects as competitors.
 
 ## Core workflow
 

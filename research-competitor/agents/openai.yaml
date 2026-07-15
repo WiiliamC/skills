@@ -1,4 +1,4 @@
 interface:
-  display_name: "research-competitor"
-  short_description: "Evidence-first competitor and market research reports"
+  display_name: "Research Competitor"
+  short_description: "Explicit competitor analysis and product benchmarking"
   default_prompt: "Use $research-competitor to conduct a comprehensive competitor and market study with current sources, comparable metrics, and a decision-ready report."
