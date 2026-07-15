@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research General"
+  short_description: "Broad, sourced research for general information needs"
+  default_prompt: "Use $research-general to investigate this topic comprehensively and produce a source-backed synthesis."
