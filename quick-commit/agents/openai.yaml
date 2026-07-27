@@ -1,0 +1,4 @@
+interface:
+  display_name: "Quick Commit"
+  short_description: "Generate a commit message and commit current changes"
+  default_prompt: "Use $quick-commit to generate a message from my current changes and commit them immediately."
