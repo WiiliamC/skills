@@ -7,6 +7,8 @@ description: Quickly commit all current Git working-tree changes by deriving a c
 
 Commit the repository's current changes with minimal ceremony. Treat invocation of this skill as authorization to stage and commit all current changes.
 
+Codex commands run inside the sandbox by default. Read-only Git inspection can run there, but staging and committing require escalated execution outside the sandbox. Skill invocation authorizes the commit; it does not bypass the execution-permission approval mechanism.
+
 ## Workflow
 
 1. Confirm the current directory belongs to a Git worktree with `git rev-parse --show-toplevel`.
@@ -21,13 +23,13 @@ Commit the repository's current changes with minimal ceremony. Treat invocation 
 3. Do not review the changes for correctness. Do not separately invoke tests, UT, lint, type checks, builds, formatters, validation commands, or `git diff --check`. Allow any Git hooks triggered by the commit to run normally.
 4. If `git status --short` shows no changes, stop and report that there is nothing to commit.
 5. Generate one concise commit subject that reflects all current changes and follows the language and style of recent commit subjects when practical. Prefer the user's explicit commit-message instructions when provided.
-6. Stage and commit in exactly one shell command:
+6. Stage and commit in exactly one shell command using `exec_command` with `sandbox_permissions: "require_escalated"` and a `justification` explaining that escalation is required to write Git metadata and create the commit:
 
    ```bash
    git add -A && git commit -m "<subject>"
    ```
 
-   Do not run `git add` as a separate command. Safely quote the generated subject. Never add `--no-verify`; allow all configured Git hooks to execute. Do not ask for confirmation.
+   Request escalated execution directly; do not first attempt this command in the sandbox. Do not run `git add` as a separate command. Safely quote the generated subject. Never add `--no-verify`; allow all configured Git hooks to execute. Do not ask for an additional conversational confirmation beyond the required execution-permission approval.
 7. Report the resulting short commit hash and subject.
 
 ## Boundaries
