@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Changes"
+  short_description: "由独立子代理审查 PR、分支或未提交改动，复核缺陷与简化机会"
+  default_prompt: "使用 $review-changes，让独立 sub-agent 完整审查当前改动并返回缺陷、简化建议和验证限制。"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "改动简化与验收"
+  short_description: "审查并简化 PR、分支或未提交改动，保留行为契约，由主代理独立验收"
+  default_prompt: "使用 $simplify-changes 简化当前改动，保留现有行为，并由你负责验收。"
