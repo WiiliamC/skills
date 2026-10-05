@@ -5,39 +5,29 @@ description: Quickly commit all current Git working-tree changes by deriving a c
 
 # Quick Commit
 
-Commit the repository's current changes with minimal ceremony. Treat invocation of this skill as authorization to stage and commit all current changes.
-
-Codex commands run inside the sandbox by default. Read-only Git inspection can run there, but staging and committing require escalated execution outside the sandbox. Skill invocation authorizes the commit; it does not bypass the execution-permission approval mechanism.
+Use [scripts/commit_by_codex.sh](scripts/commit_by_codex.sh) to commit all tracked changes and non-ignored new files, including existing working-tree changes. Invocation authorizes staging and committing this complete scope. If the user permits only specific files, stop to align the scope: the tool does not support a file whitelist.
 
 ## Workflow
 
-1. Confirm the current directory belongs to a Git worktree with `git rev-parse --show-toplevel`.
-2. Inspect only the information needed to understand and summarize the changes:
-   - `git status --short`
-   - `git diff --stat`
-   - `git diff --cached --stat`
-   - `git diff`
-   - `git diff --cached`
-   - untracked file contents only when needed to describe them
-   - a short recent subject history such as `git log -5 --pretty=%s`
-3. Do not review the changes for correctness. Do not separately invoke tests, UT, lint, type checks, builds, formatters, validation commands, or `git diff --check`. Allow any Git hooks triggered by the commit to run normally.
-4. If `git status --short` shows no changes, stop and report that there is nothing to commit.
-5. Generate one concise commit subject that reflects all current changes and follows the language and style of recent commit subjects when practical. Prefer the user's explicit commit-message instructions when provided.
-6. Stage and commit in exactly one shell command using `exec_command` with `sandbox_permissions: "require_escalated"` and a `justification` explaining that escalation is required to write Git metadata and create the commit:
+Resolve the target repository from the user's path or current working directory with `git rev-parse --show-toplevel`, then pass its absolute path to the script:
 
-   ```bash
-   git add -A && git commit -m "<subject>"
-   ```
+```bash
+bash /path/to/quick-commit/scripts/commit_by_codex.sh --repo /path/to/repository -y
+```
 
-   Request escalated execution directly; do not first attempt this command in the sandbox. Do not run `git add` as a separate command. Safely quote the generated subject. Never add `--no-verify`; allow all configured Git hooks to execute. Do not ask for an additional conversational confirmation beyond the required execution-permission approval.
-7. Report the resulting short commit hash and subject.
+Replace `/path/to/quick-commit` with this SKILL.md's directory. Run through `exec_command` with `sandbox_permissions: "require_escalated"` and a justification explaining that Git metadata writes and committing require escalation. Do not first attempt the commit in the sandbox. Skill invocation authorizes the commit but does not bypass execution permissions; `-y` avoids a second conversational confirmation.
 
-## Boundaries
+The script owns candidate snapshotting, commit-message generation, consistency checks, staging and committing. Do not duplicate its diff inspection or generate a separate message in the calling agent. Its read-only Codex session uses `gpt-6-luna` by default; pass `--model MODEL` only when requested. Repository commit and privacy rules take precedence over recent subject style.
 
-- Do not modify source files.
-- Do not omit selected current changes unless the user explicitly limits the scope.
-- Do not amend an existing commit unless explicitly requested.
-- Do not push the commit.
-- Do not bypass Git hooks.
-- Do not claim that the committed code is correct or tested.
-- If staging or committing fails, report the exact failure and resulting repository state. Do not undo a successful staging step when the commit step fails.
+Do not review correctness or separately run tests, lint, type checks, builds, formatters, or `git diff --check`. Git hooks and signing run normally. Do not modify source files, amend, push, bypass hooks, or claim the code is correct or tested.
+
+Report the resulting short hash and subject. If the script reports no changes, report that there is nothing to commit. On failure, report the failed step and inspect repository state when needed. A failed commit preserves the original staging area; a failure after Git creates the commit must be reported as a created commit with a synchronization failure, rather than retried automatically.
+
+## Shared implementation
+
+Dependencies: Bash, Git, Python 3, Codex CLI, and the repository's existing hooks/signing environment. This skill has no dependency on review skills.
+
+- `commit_by_codex.sh` constructs the complete candidate in a temporary index, supplies its diff and recent subjects to read-only Codex, verifies repository consistency, commits, and synchronizes the real index.
+- `worktree_fingerprint.sh` provides the shared content identity used by review checkpoints and the optional `--reviewed-snapshot VERSION:HASH` commit guard.
+
+`review-and-commit` depends on these scripts and supplies the reviewed snapshot after review passes. Both skills use this single commit implementation; quick commits do not require a review snapshot.

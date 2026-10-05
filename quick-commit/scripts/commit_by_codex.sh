@@ -11,7 +11,7 @@ Usage: commit_by_codex.sh [--repo PATH] [--model MODEL] [--reviewed-snapshot VER
 
 Generate a commit message with read-only Codex, then ask before committing all
 tracked changes and non-ignored new files. Requires Bash, Git, Python 3, Codex,
-and an interactive terminal unless -y is supplied. Default model: gpt-5.6-luna.
+and an interactive terminal unless -y is supplied. Default model: gpt-6-luna.
 
   --reviewed-snapshot VERSION:HASH
         Require the candidate to match the snapshot handed off by review.
@@ -21,7 +21,7 @@ HELP
 }
 fail() { printf 'Error: %s\n' "$*" >&2; exit 1; }
 repo=.
-model=gpt-5.6-luna
+model=gpt-6-luna
 auto_confirm=false
 reviewed_snapshot=""
 while (($#)); do

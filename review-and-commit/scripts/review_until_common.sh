@@ -7,7 +7,12 @@ umask 077
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=terminal_tab_spinner.sh
 source "${script_dir}/terminal_tab_spinner.sh"
-source "${script_dir}/worktree_fingerprint.sh"
+fingerprint_script="${script_dir}/../../quick-commit/scripts/worktree_fingerprint.sh"
+if [[ ! -f "$fingerprint_script" ]]; then
+    echo 'Error: missing quick-commit/scripts/worktree_fingerprint.sh. Install quick-commit alongside review-and-commit.' >&2
+    exit 2
+fi
+source "$fingerprint_script"
 
 # This file is sourced by the two public entrypoints.
 if [[ "${review_until_workflow:-}" != changes && "${review_until_workflow:-}" != pr ]]; then

@@ -5,7 +5,7 @@ description: 审查改动、自动修复缺陷及保持功能的简化建议，�
 
 # 审查、修复并提交
 
-使用随 skill 安装的脚本完成 review/fix 循环和自动提交。当前 agent 负责选择范围、执行工具、跟进进度与呈现结果；脚本中的独立 Codex 会话负责审查、修复和提交消息生成。不要在当前 agent 重复整套审查，也不要把循环改成递归调用本 skill。
+使用随 skill 安装的脚本完成 review/fix 循环，通过后调用 [quick-commit 的提交脚本](../quick-commit/scripts/commit_by_codex.sh)。当前 agent 负责选择范围、执行工具、跟进进度与呈现结果；审查脚本中的独立 Codex 会话负责审查和修复，共用提交脚本中的只读 Codex 会话负责生成提交消息。不要在当前 agent 重复整套审查，也不要把循环改成递归调用本 skill。
 
 调用本 skill 表示授权修复审查发现的问题，并在通过后暂存、提交目标仓库全部 tracked 改动及非忽略的新文件，包括已有工作区改动；无需再问是否提交。遵守用户指定的范围及仓库指令。若用户只允许提交特定文件，现有工具不支持文件白名单，应先对齐处理方式，不能扩大提交范围。不自动 amend 或 push，不绕过 hooks 或签名。
 
@@ -14,12 +14,14 @@ description: 审查改动、自动修复缺陷及保持功能的简化建议，�
 - 默认使用 `--review-scope branch`：只查本地 main，缺失时查本地 master；固定 merge-base，审查分支提交及 staged、unstaged、相关 untracked 文件。需要新启动的 Codex 能使用 review-changes、其 simplify-changes 依赖及独立子代理。缺少基线、共同祖先、skill、依赖或委派能力时停止，不降级或提交。
 - 用户明确说“只审查未提交改动”时用 `--review-scope changes`：保留内嵌的本地改动审查流程。
 - 仓库从用户指定路径或当前工作目录确定，传递绝对 `--repo`。显式恢复日志能自行确定仓库，不要用当前目录覆盖日志中的目标。
-- 默认最多 12 轮、默认 service tier。用户要求时传 `--max-loops N` 或 `--fast`。`--model MODEL` 只改变提交消息模型，默认沿用工具设置。
+- 默认最多 12 轮、默认 service tier。用户要求时传 `--max-loops N` 或 `--fast`。`--model MODEL` 只改变提交消息模型，默认使用共用提交工具的 `gpt-6-luna`。
 - 分支模式中的 P0–P3 缺陷及可操作、保持功能的简化建议均阻止通过；改变功能或范围的建议只报告，不自动执行。
 
 ## 执行工具
 
 将下面示例中的 `/path/to/review-and-commit` 替换为当前 SKILL.md 所在目录。使用 skill 内的脚本，不依赖 ez_tools checkout。依赖 Bash、Git、Python 3、Codex CLI、flock、setsid，以及目标仓库既有的 hooks/签名环境。
+
+`quick-commit` 必须与本 skill 安装在同一父目录下。本 skill 保有审查入口和循环；`quick-commit/scripts/` 保有提交实现及审查/提交共用的工作区指纹函数。缺少该依赖时停止，不回退到另一套提交实现。
 
 默认分支流程：
 

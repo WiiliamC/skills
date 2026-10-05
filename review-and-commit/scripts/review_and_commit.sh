@@ -2,6 +2,7 @@
 set -euo pipefail
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+commit_script="$script_dir/../../quick-commit/scripts/commit_by_codex.sh"
 
 usage() {
     cat <<'HELP'
@@ -17,7 +18,7 @@ Run review/fix cycles, then automatically commit only if review succeeds.
   --resume [LOG]    Resume LOG, or the newest incomplete run for the repository.
   --allow-worktree-changes
                     Allow expected worktree changes when resuming.
-  --model MODEL     Commit-message model. Default: gpt-5.6-luna.
+  --model MODEL     Override the shared commit tool's model (default: gpt-6-luna).
   -h, --help        Show this help message.
 
 The commit step always uses -y to skip confirmation. Git hooks and signing
@@ -47,6 +48,8 @@ while (($#)); do
         *) review_args+=("$1"); shift ;;
     esac
 done
+
+[[ -f "$commit_script" ]] || fail 'Missing dependency: quick-commit/scripts/commit_by_codex.sh. Install quick-commit alongside review-and-commit.'
 
 review_script="$script_dir/review_changes_untill_satisfied.sh"
 if [[ "$review_scope" == branch ]]; then
@@ -87,4 +90,4 @@ resolved_repo=$(git -C "$repo" rev-parse --show-toplevel) || fail 'Review reposi
 [[ "$resolved_repo" == "$repo" ]] || fail 'Review repository must be the repository root.'
 rm -rf -- "$result_dir"
 trap - EXIT INT TERM
-exec bash "$script_dir/commit_by_codex.sh" --repo "$repo" --reviewed-snapshot "$reviewed_snapshot" "${commit_args[@]}" -y
+exec bash "$commit_script" --repo "$repo" --reviewed-snapshot "$reviewed_snapshot" "${commit_args[@]}" -y
