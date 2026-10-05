@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review and Commit"
+  short_description: "Review, fix findings, and commit after the review passes"
+  default_prompt: "Use $review-and-commit to review my current branch, fix actionable findings, and commit after review passes."
