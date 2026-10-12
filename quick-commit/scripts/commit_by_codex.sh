@@ -176,7 +176,7 @@ PROMPT
     printf '\nCandidate tree: %s\nChanged files:\n' "$approved_tree"
     git -c color.ui=false -c core.quotePath=true diff --no-ext-diff --no-textconv --name-status "$base_tree" "$approved_tree" --
     printf '\nFull textual candidate diff:\n'
-    git -c color.ui=false -c core.quotePath=true diff --no-ext-diff --no-textconv --no-renames "$base_tree" "$approved_tree" --
+    git -c color.ui=false -c core.quotePath=true diff --no-ext-diff --no-textconv --find-renames "$base_tree" "$approved_tree" --
 }
 printf 'Generating commit message with %s...\n' "$model"
 # Stream events through Python: only the validated final message reaches Bash.
