@@ -1,0 +1,6 @@
+interface:
+  display_name: "improve-skill"
+  short_description: "根据当前对话检查涉及的技能，先给出具体修改建议，用户批准后再更新"
+  default_prompt: "使用 $improve-skill 检查当前对话涉及的 skill 是否需要更新，先给出具体修改建议，等我批准后再修改。"
+policy:
+  allow_implicit_invocation: false
