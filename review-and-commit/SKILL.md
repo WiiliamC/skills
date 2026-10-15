@@ -1,6 +1,6 @@
 ---
 name: review-and-commit
-description: 审查改动、自动修复缺陷及保持功能的简化建议，反复复核，通过后直接提交。用于“review and commit”“审查修复并提交”“review 到满意后提交”及恢复此流程；默认覆盖当前分支相对本地 main/master 的全部改动，也支持仅未提交改动。不用于只读 review 或跳过审查的快速提交。
+description: 审查改动、自动修复缺陷及保持功能的简化建议，反复复核，通过后直接提交。用于“review and commit”“审查修复并提交”“review 到满意后提交”及恢复此流程；默认动态选择范围：有未提交改动时审查未提交改动，否则审查当前分支相对本地 main/master 的改动。不用于只读 review 或跳过审查的快速提交。
 ---
 
 # 审查、修复并提交
@@ -11,8 +11,9 @@ description: 审查改动、自动修复缺陷及保持功能的简化建议，�
 
 ## 选择范围与参数
 
-- 默认使用 `--review-scope branch`：只查本地 main，缺失时查本地 master；固定 merge-base，审查分支提交及 staged、unstaged、相关 untracked 文件。需要新启动的 Codex 能使用 review-changes、其 simplify-changes 依赖及独立子代理。缺少基线、共同祖先、skill、依赖或委派能力时停止，不降级或提交。
-- 用户明确说“只审查未提交改动”时用 `--review-scope changes`：保留内嵌的本地改动审查流程。
+- 默认使用 `--review-scope auto`（可省略）：检查目标仓库全部 staged、unstaged 和非忽略的 untracked 文件；有未提交改动时选择 `changes`，否则选择 `branch`。每次新运行只选择一次范围。用户明确指定范围时优先使用其要求。
+- `--review-scope branch`：只查本地 main，缺失时查本地 master；固定 merge-base，审查分支提交及 staged、unstaged、相关 untracked 文件。需要新启动的 Codex 能使用 review-changes、其 simplify-changes 依赖及独立子代理。缺少基线、共同祖先、skill、依赖或委派能力时停止，不降级或提交。
+- `--review-scope changes`：仅审查未提交改动，使用内嵌的本地改动审查流程。
 - 仓库从用户指定路径或当前工作目录确定，传递绝对 `--repo`。显式恢复日志能自行确定仓库，不要用当前目录覆盖日志中的目标。
 - 默认最多 12 轮、默认 service tier。用户要求时传 `--max-loops N` 或 `--fast`。`--model MODEL` 只改变提交消息模型，默认使用共用提交工具的 `gpt-6-luna`。
 - 分支模式中的 P0–P3 缺陷及可操作、保持功能的简化建议均阻止通过；改变功能或范围的建议只报告，不自动执行。
@@ -23,10 +24,10 @@ description: 审查改动、自动修复缺陷及保持功能的简化建议，�
 
 `quick-commit` 必须与本 skill 安装在同一父目录下。本 skill 保有审查入口和循环；`quick-commit/scripts/` 保有提交实现及审查/提交共用的工作区指纹函数。缺少该依赖时停止，不回退到另一套提交实现。
 
-默认分支流程：
+默认动态选择范围：
 
 ```bash
-bash /path/to/review-and-commit/scripts/review_and_commit.sh --review-scope branch --repo /path/to/repository
+bash /path/to/review-and-commit/scripts/review_and_commit.sh --repo /path/to/repository
 ```
 
 仅未提交改动：
@@ -43,8 +44,8 @@ bash /path/to/review-and-commit/scripts/review_and_commit.sh --review-scope chan
 
 - 审查不通过达到轮数上限返回 1；审查未完成、输出无效、基线/恢复检查失败返回 2；Codex 超时返回 124。其他子步骤失败码原样返回。均不把失败当作通过，不自动提高轮数或反复重试。
 - 日志在仓库外，分支与本地改动分别使用 `review_pr_untill_satisfied`、`review_changes_untill_satisfied` 状态目录。日志和 sidecars 是私有运行数据，不加入 Git，也不在答复中粘贴原始事件。
-- 用户请求恢复时，按状态 sidecar 的 `review_mode` 选择 branch（pr）或 changes；旧版缺少模式的状态只支持 changes。可读取必要状态字段，避免加载整份日志。
-- `--resume LOG` 追加原日志；不带 LOG 时在对应范围、仓库的日志目录查找最新未完成运行。恢复沿用已保存 service tier，不能同时传 `--fast`。
+- 用户指定恢复日志且未显式指定范围时，脚本按状态 sidecar 的 `review_mode` 选择 branch（pr）或 changes，优先于当前工作区状态；旧版缺少模式的状态只支持 changes。可读取必要状态字段，避免加载整份日志。
+- `--resume LOG` 追加原日志；不带 LOG 时在所选范围、仓库的日志目录查找最新未完成运行。自动模式仍按当前工作区状态选择范围；若已知原运行范围，显式传 `--review-scope branch|changes`，避免修复产生的改动改变恢复范围。恢复沿用已保存 service tier，不能同时传 `--fast`。
 - 不自动添加 `--allow-worktree-changes`；只有用户明确允许预期漂移时才使用。已固定基线变化后必须启动新运行。
 - 已通过的 review 日志不能恢复，因而提交阶段失败不能靠 `--resume` 重试提交。修复提交环境后重新执行本流程，以重新审查当前内容。
 

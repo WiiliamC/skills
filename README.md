@@ -3,7 +3,7 @@
 ## 提交技能
 
 - `quick-commit`：直接提交当前仓库全部 tracked 改动和未被忽略的新文件，不另行审查或运行测试。
-- `review-and-commit`：审查并修复问题，通过后调用 `quick-commit` 的共用提交脚本，并校验审查快照。
+- `review-and-commit`：默认有未提交改动时审查未提交改动，否则审查分支改动；修复问题并通过审查后，调用 `quick-commit` 的共用提交脚本，并校验审查快照。
 
 两个 skill 必须安装在同一父目录下。提交实现和共用工作区指纹函数位于 `quick-commit/scripts/`；提交消息默认使用 `gpt-6-luna`，Git hooks 和签名正常执行。
 
@@ -31,14 +31,14 @@ prefix_rule(
 
 ```bash
 bash /path/to/skills/quick-commit/scripts/commit_by_codex.sh --repo /path/to/repository -y
-bash /path/to/skills/review-and-commit/scripts/review_and_commit.sh --review-scope branch --repo /path/to/repository
+bash /path/to/skills/review-and-commit/scripts/review_and_commit.sh --repo /path/to/repository
 ```
 
 可使用以下命令检查规则是否匹配；检查不会实际执行提交：
 
 ```bash
 codex execpolicy check --pretty --rules ~/.codex/rules/commit-skills.rules -- bash /path/to/skills/quick-commit/scripts/commit_by_codex.sh --repo /path/to/repository -y
-codex execpolicy check --pretty --rules ~/.codex/rules/commit-skills.rules -- bash /path/to/skills/review-and-commit/scripts/review_and_commit.sh --review-scope branch --repo /path/to/repository
+codex execpolicy check --pretty --rules ~/.codex/rules/commit-skills.rules -- bash /path/to/skills/review-and-commit/scripts/review_and_commit.sh --repo /path/to/repository
 ```
 
 预期结果为 `decision: allow`。保存后重启 Codex，以加载新规则。其他匹配规则或管理员策略如果要求询问或禁止执行，仍以更严格的决定为准。这两条规则不授权单独执行 `git push`。
