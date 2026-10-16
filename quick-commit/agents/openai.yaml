@@ -1,4 +1,4 @@
 interface:
   display_name: "Quick Commit"
-  short_description: "Generate a commit message and commit current changes"
-  default_prompt: "Use $quick-commit to generate a message from my current changes and commit them immediately."
+  short_description: "Commit current-task changes using the requested scope"
+  default_prompt: "Use $quick-commit to commit the changes from this task, preserving unrelated changes."

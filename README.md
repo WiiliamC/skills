@@ -2,47 +2,15 @@
 
 ## 提交技能
 
-- `quick-commit`：直接提交当前仓库全部 tracked 改动和未被忽略的新文件，不另行审查或运行测试。
-- `review-and-commit`：默认有未提交改动时审查未提交改动，否则审查分支改动；修复问题并通过审查后，调用 `quick-commit` 的共用提交脚本，并校验审查快照。
+- `quick-commit`：默认提交本次任务的改动，按用户提示和对话确定文件及代码块范围；当前 agent 阅读完整候选 diff、复用提交消息提示词并直接执行 Git 提交，不另行审查或运行测试。
+- `review-and-commit`：主 agent 编排独立 review / fix 子代理，复核缺陷和保持功能的简化建议，循环收敛后调用 quick-commit skill。默认有未提交改动时审查 changes，否则审查 branch；可用自然语言明确指定仓库、范围和基线。
 
-两个 skill 必须安装在同一父目录下。提交实现和共用工作区指纹函数位于 `quick-commit/scripts/`；提交消息默认使用 `gpt-6-luna`，Git hooks 和签名正常执行。
+quick-commit 优先提交本次任务的改动，保留可识别的任务外改动，包括已暂存内容；无法确认本次任务范围时，无需再次确认，提交目标仓库全部 tracked 改动及非忽略新文件。也支持明确指定文件、功能、仅已暂存内容或全部改动；明确范围优先，不受兜底规则影响。review-and-commit 按其已确定并审查通过的提交范围调用 quick-commit。遵守目标仓库规范，正常执行 Git hooks 和签名，不自动 amend 或 push。提交失败时核对实际 Git 状态，不盲目重试。
 
-## 本机配置：执行提交脚本时免重复询问
+## 实现与权限
 
-Codex 的命令允许规则可以让指定脚本在沙箱外运行而不重复弹出权限询问。脚本的 `-y` 仅跳过脚本自身的提交确认，不能代替 Codex 权限配置。
+review-and-commit 需要可用的独立子代理，以及可读取的 review-changes、simplify-changes 和 quick-commit。审查标准复用已有参考资料，主 agent 复核建议后才交给修复代理。quick-commit 由当前 agent 完成，不依赖提交消息模型或额外 Codex CLI 会话。
 
-在 `~/.codex/rules/commit-skills.rules` 中添加以下规则。将示例中的 `/path/to/skills` 替换为本机技能安装目录的实际绝对路径：
+旧的审查循环、提交脚本、自定义工作区指纹、CLI 参数和日志恢复入口已删除。无需为这些脚本新增免审批规则；已有按旧脚本路径匹配的规则不再用于新流程，可由使用者自行清理。不将旧脚本权限扩大为所有 Bash 或 Git 命令，实际 Git 写入按当前环境权限机制执行。
 
-```python
-prefix_rule(
-    pattern = ["bash", "/path/to/skills/quick-commit/scripts/commit_by_codex.sh"],
-    decision = "allow",
-)
-
-prefix_rule(
-    pattern = ["bash", "/path/to/skills/review-and-commit/scripts/review_and_commit.sh"],
-    decision = "allow",
-)
-```
-
-这些前缀允许后续附加任意脚本参数，包括目标仓库 `--repo`。第一条授权提交脚本；第二条授权完整的审查、修复和提交流程。规则按脚本路径匹配，修改该路径下的脚本后仍然适用。
-
-调用时保持 `bash` 加绝对脚本路径的形式，例如：
-
-```bash
-bash /path/to/skills/quick-commit/scripts/commit_by_codex.sh --repo /path/to/repository -y
-bash /path/to/skills/review-and-commit/scripts/review_and_commit.sh --repo /path/to/repository
-```
-
-可使用以下命令检查规则是否匹配；检查不会实际执行提交：
-
-```bash
-codex execpolicy check --pretty --rules ~/.codex/rules/commit-skills.rules -- bash /path/to/skills/quick-commit/scripts/commit_by_codex.sh --repo /path/to/repository -y
-codex execpolicy check --pretty --rules ~/.codex/rules/commit-skills.rules -- bash /path/to/skills/review-and-commit/scripts/review_and_commit.sh --repo /path/to/repository
-```
-
-预期结果为 `decision: allow`。保存后重启 Codex，以加载新规则。其他匹配规则或管理员策略如果要求询问或禁止执行，仍以更严格的决定为准。这两条规则不授权单独执行 `git push`。
-
-也可以在权限弹窗支持的情况下保存对应命令前缀。不要将允许范围扩大为所有 `bash` 命令。
-
-参考：[OpenAI 官方 Rules 文档](https://learn.chatgpt.com/docs/agent-configuration/rules)。
+审查与提交之间检查实际内容变化；会修改文件的 hook 应在进入审查前完成，后续内容变化需重新核实相关审查结论。相同的 git status 不代表内容未变。
