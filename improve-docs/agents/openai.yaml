@@ -1,0 +1,6 @@
+interface:
+  display_name: "improve-docs"
+  short_description: "开发收尾时检查文档、AGENTS.md 与相关技能，先给出具体建议，获批后更新"
+  default_prompt: "使用 $improve-docs 根据本次开发的上下文和实际改动，检查项目文档、各级 AGENTS.md、相关 skill 和需要落盘的新约定，先给出具体建议，等我批准后再修改。"
+policy:
+  allow_implicit_invocation: false
