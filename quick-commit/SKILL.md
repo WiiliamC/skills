@@ -32,7 +32,7 @@ Generate a concise message using the linked prompt and the complete selected can
 
 Choose Git operations that preserve both unrelated staged and unstaged changes:
 
-- Use repository-wide `git add -A` only when the requested scope includes all current changes. For a staged-only request, use the existing index without staging or using `--only`, which would take worktree contents instead.
+- When the requested scope includes all current changes without exclusions, prefer `git add .` from the repository root (or `git -C <repo-root> add .`) instead of enumerating every changed path. Use repository-wide staging only for this all-changes scope. For a staged-only request, use the existing index without staging or using `--only`, which would take worktree contents instead.
 - When the selected scope includes whole files, stage only those paths. If unrelated paths are already staged, a path-scoped commit such as `git commit --only -- <selected paths>` can preserve them; inspect its actual worktree candidate first.
 - When a selected file also contains unrelated hunks, do not stage or commit the whole file or use `--only` for that file. Prepare only the selected hunks, using an isolated temporary index if necessary to preserve unrelated real-index entries. After committing through a temporary index, reconcile only the committed hunks in the real index against the new HEAD, preserving unrelated entries and hunks; do not replace the whole real index. Verify that the commit excludes unrelated hunks and that their staged/unstaged state remains intact. Never reset or overwrite the user's index or worktree to simplify selection.
 
