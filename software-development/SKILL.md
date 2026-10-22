@@ -28,6 +28,14 @@ suite, development logs, commits, or publication.
 
 ## Repository fit and design
 
+- Determine whether the repository is private or public/open source from project
+  instructions or verified repository visibility. If uncertain, ask the user;
+  once confirmed, record the classification and applicable privacy rules in the
+  project-level `AGENTS.md` (create or update it as needed).
+- For public/open-source repositories, keep private information out of Git,
+  including committed files and messages: use generic placeholders for local
+  usernames, personal paths, and private environment details, and exclude secrets
+  and private logs. Normal commit author/committer attribution is exempt.
 - Read the applicable repository and module instructions, then the nearest usage
   documentation and relevant implementation/tests. Prefer existing execution
   scripts, shared utilities, fixtures, and local conventions.
