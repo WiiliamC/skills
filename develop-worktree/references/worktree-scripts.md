@@ -8,7 +8,7 @@
 
 ## 默认接口
 
-依赖 Bash、Git、Python 3（标准库，Python 3.8+）。脚本不加载项目 `env.sh`。可设置 `WORKTREE_PYTHON` 选择 Python 可执行文件，否则使用 `python3`。
+依赖 Bash、Git、Python 3（标准库，Python 3.8+）。脚本不加载项目 `env.sh`。自动检测 `git worktree list -z` 支持；旧版 Git 使用等价的 `git worktree list --porcelain`，保留注册、锁定及清理检查。旧版输出遇到换行路径等无法可靠解析的记录时停止并提示升级 Git，不猜测路径。可设置 `WORKTREE_PYTHON` 选择 Python 可执行文件，否则使用 `python3`。
 
 从 skill 所在目录解析下面的脚本绝对路径；示例中的 `/path/to/skill` 和仓库路径需替换为实际路径。
 

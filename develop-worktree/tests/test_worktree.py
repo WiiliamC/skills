@@ -65,6 +65,31 @@ class LifecycleTests(unittest.TestCase):
             1,
         )
 
+    def test_legacy_listing_preserves_registration_and_lock(self):
+        self.create()
+        self.git("worktree", "lock", "--reason", "in use", str(self.task))
+        original = w.git
+        help_result = subprocess.CompletedProcess([], 129, b"usage: git worktree list --porcelain", b"")
+        output = original(self.root, "worktree", "list", "--porcelain")
+        with patch.object(w.subprocess, "run", return_value=help_result), patch.object(w, "git", return_value=output) as run_git:
+            records = w.entries(self.root)
+        run_git.assert_called_once_with(self.root, "worktree", "list", "--porcelain")
+        task = next(e for e in records if e["worktree"] == str(self.task))
+        self.assertEqual(task["branch"], "refs/heads/feat_test")
+        self.assertEqual(task["locked"], "in use")
+
+    def test_null_listing_preserves_newline_path(self):
+        output = b"worktree /tmp/a\nb\0HEAD abc\0detached\0\0"
+        help_result = subprocess.CompletedProcess([], 129, b"  -z  terminate with NUL", b"")
+        with patch.object(w.subprocess, "run", return_value=help_result), patch.object(w, "git", return_value=output) as run_git:
+            self.assertEqual(w.entries(self.root)[0]["worktree"], "/tmp/a\nb")
+        run_git.assert_called_once_with(self.root, "worktree", "list", "--porcelain", "-z")
+
+    def test_legacy_ambiguous_path_refused(self):
+        help_result = subprocess.CompletedProcess([], 129, b"usage", b"")
+        with patch.object(w.subprocess, "run", return_value=help_result), patch.object(w, "git", return_value=b"worktree /tmp/a\nb\nHEAD abc\n\n"), self.assertRaisesRegex(w.CheckError, "Ambiguous"):
+            w.entries(self.root)
+
     def test_non_main_full_lifecycle(self):
         self.create()
         self.assertEqual(

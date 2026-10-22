@@ -25,13 +25,31 @@ def git(root, *args):
 
 def entries(root):
     result, entry = [], {}
-    for field in git(root, "worktree", "list", "--porcelain", "-z").split(b"\0"):
+    # Probe support instead of relying on version strings or translated errors.
+    help_result = subprocess.run(
+        ["git", "-C", str(root), "worktree", "list", "-h"],
+        capture_output=True, check=False, env=dict(os.environ, LC_ALL="C"),
+    )
+    supports_null = b"-z" in help_result.stdout + help_result.stderr
+    if supports_null:
+        fields = git(root, "worktree", "list", "--porcelain", "-z").split(b"\0")
+    else:
+        # Old Git emits literal paths, including embedded newlines. Reject
+        # ambiguous records rather than risk selecting the wrong worktree.
+        fields = git(root, "worktree", "list", "--porcelain").split(b"\n")
+    for field in fields:
         if not field:
             if entry:
                 result.append(entry)
                 entry = {}
         else:
             key, _, value = os.fsdecode(field).partition(" ")
+            if not supports_null and (
+                key not in {"worktree", "HEAD", "branch", "detached", "bare", "locked", "prunable"}
+                or key in entry
+                or (not entry and key != "worktree")
+            ):
+                raise CheckError("Ambiguous legacy worktree listing; use Git with list -z support")
             entry[key] = value
     if entry:
         result.append(entry)
